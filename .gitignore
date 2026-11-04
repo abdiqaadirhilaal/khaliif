@@ -1,0 +1,2 @@
+# local data backups (business data, keep private)
+backend/*-backup.json
