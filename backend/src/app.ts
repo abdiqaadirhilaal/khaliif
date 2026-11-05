@@ -22,6 +22,9 @@ import notificationRoutes from "./routes/notifications";
 import reportRoutes from "./routes/reports";
 import { errorHandler, notFound } from "./middleware/error";
 const app = express();
+// Hostinger sits behind a single reverse proxy; trust it so rate limiting
+// and req.ip read the real client IP from X-Forwarded-For.
+app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 const allowedOrigins = env.clientUrl.split(",").map((o) => o.trim()).filter(Boolean);
 app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)), credentials: true }));

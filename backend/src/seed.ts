@@ -6,9 +6,23 @@ import { Product } from "./models/Product";
 import { CompanySettings } from "./models/CompanySettings";
 (async () => {
   await connectDB();
-  const email = process.env.ADMIN_EMAIL, password = process.env.ADMIN_PASSWORD;
+  const email = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
+  const name = process.env.ADMIN_NAME || "Super Admin";
   if (!email || !password || password === "CHANGE_THIS_PASSWORD") throw new Error("Set ADMIN_EMAIL and a real ADMIN_PASSWORD in .env first");
-  if (!(await User.findOne({ email }))) { await User.create({ name: process.env.ADMIN_NAME || "Super Admin", email, password, role: "super_admin" }); console.log("Admin created:", email); }
+  // Upsert the single admin account by normalized email; never create duplicates.
+  const admin = await User.findOne({ email });
+  if (admin) {
+    admin.name = name;
+    admin.password = password;
+    admin.role = "super_admin";
+    admin.active = true;
+    await admin.save();
+    console.log("Admin updated:", email);
+  } else {
+    await User.create({ name, email, password, role: "super_admin", active: true });
+    console.log("Admin created:", email);
+  }
   const names = ["Men's Clothes","Women's Clothes","Children's Clothes","Shirts","Trousers","Dresses","Jackets","Jeans","Sportswear","Mixed Bundles","Other"];
   for (const name of names) await Category.updateOne({ name }, { $setOnInsert: { name, active: true } }, { upsert: true });
   if (!(await CompanySettings.findOne())) await CompanySettings.create({ website: {

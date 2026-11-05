@@ -9,8 +9,8 @@ import { protect } from "../middleware/auth";
 const r = Router();
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: { success: false, message: "Too many attempts. Try again in 15 minutes." } });
 r.post("/login", limiter, wrap(async (req, res) => {
-  const { email, password } = z.object({ email: z.string().email(), password: z.string().min(1) }).parse(req.body);
-  const user: any = await User.findOne({ email: email.toLowerCase() }).select("+password");
+  const { email, password } = z.object({ email: z.string().trim().toLowerCase().email(), password: z.string().min(1) }).parse(req.body);
+  const user: any = await User.findOne({ email }).select("+password");
   if (!user || !user.active || !(await user.matches(password))) throw new AppError(401, "Invalid email or password");
   const token = jwt.sign({ id: user.id }, env.jwtSecret, { expiresIn: env.jwtExpires as any });
   ok(res, { token, user }, "Logged in");
