@@ -31,6 +31,17 @@ app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includ
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan("dev"));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.get("/", (_q, res) =>
+  res.json({
+    success: true,
+    message: "Khaliif API running",
+    data: {
+      status: "online",
+      version: "1.0.0",
+      health: "/api/health",
+    },
+  })
+);
 app.get("/api/health", (_q, res) => res.json({ success: true, message: "API running", data: {} }));
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
